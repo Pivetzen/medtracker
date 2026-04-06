@@ -2,8 +2,8 @@
 <html lang="pt-br">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>MedTracker Pro | Notificações Ativas</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>MedTracker Pro | Notificações</title>
     <style>
         :root {
             --primary: #2563eb;
@@ -13,6 +13,7 @@
             --success: #10b981;
             --danger: #ef4444;
             --border: #e2e8f0;
+            --warning: #f59e0b;
         }
 
         * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', system-ui, sans-serif; }
@@ -21,9 +22,16 @@
         .container { width: 100%; max-width: 480px; background: var(--card); padding: 25px; border-radius: 20px; box-shadow: 0 10px 25px rgba(0,0,0,0.05); }
         .logo { text-align: center; font-size: 1.6rem; font-weight: 800; color: var(--primary); margin-bottom: 25px; }
         
+        /* Botão de Ativação (Essencial para Safari/iOS) */
+        #setup-notif {
+            background: var(--warning); color: white; padding: 12px; border-radius: 12px; 
+            margin-bottom: 20px; text-align: center; font-size: 0.85rem; font-weight: 700;
+            cursor: pointer; display: none; border: none; width: 100%;
+        }
+
         .form-group { margin-bottom: 12px; }
         label { display: block; font-size: 0.8rem; font-weight: 700; margin-bottom: 4px; color: #64748b; text-transform: uppercase; }
-        input { width: 100%; padding: 12px; border: 2px solid var(--border); border-radius: 10px; font-size: 1rem; outline: none; }
+        input { width: 100%; padding: 12px; border: 2px solid var(--border); border-radius: 10px; font-size: 16px; outline: none; }
         input:focus { border-color: var(--primary); }
 
         .btn-add { width: 100%; padding: 15px; background: var(--primary); color: white; border: none; border-radius: 12px; font-weight: 700; cursor: pointer; margin-top: 10px; }
@@ -62,6 +70,10 @@
 <div class="container">
     <div class="logo">💊 MedTracker</div>
 
+    <button id="setup-notif" onclick="enableNotifications()">
+        🔔 ATIVAR ALERTAS NO CELULAR
+    </button>
+
     <div class="form-group">
         <label>Nome do Remédio</label>
         <input id="name" type="text" placeholder="Ex: Amoxicilina">
@@ -86,14 +98,40 @@
 <script>
     let meds = JSON.parse(localStorage.getItem('meds_v3')) || [];
 
-    // Solicitar permissão de notificação logo ao abrir
-    if ("Notification" in window) {
-        Notification.requestPermission();
+    // Mostra o botão se a permissão ainda não foi dada
+    function checkNotificationStatus() {
+        if ("Notification" in window) {
+            if (Notification.permission !== "granted") {
+                document.getElementById('setup-notif').style.display = 'block';
+            } else {
+                document.getElementById('setup-notif').style.display = 'none';
+            }
+        }
+    }
+
+    async function enableNotifications() {
+        if ("Notification" in window) {
+            const permission = await Notification.requestPermission();
+            if (permission === "granted") {
+                alert("Ótimo! Agora você receberá os alertas.");
+                checkNotificationStatus();
+            } else {
+                alert("As notificações estão bloqueadas nas configurações do seu celular.");
+            }
+        }
     }
 
     function sendNotification(title, body) {
         if ("Notification" in window && Notification.permission === "granted") {
-            new Notification(title, { body, icon: 'https://cdn-icons-png.flaticon.com/512/822/822143.png' });
+            try {
+                new Notification(title, { 
+                    body: body, 
+                    icon: 'https://cdn-icons-png.flaticon.com/512/822/822143.png',
+                    badge: 'https://cdn-icons-png.flaticon.com/512/822/822143.png'
+                });
+            } catch (e) {
+                console.error("Erro ao disparar notificação:", e);
+            }
         }
     }
 
@@ -110,7 +148,6 @@
         if (!name || !interval || !days) return alert("Preencha todos os campos!");
 
         const totalDoses = Math.ceil((days * 24) / interval);
-
         const newMed = {
             id: Date.now(),
             name,
@@ -118,7 +155,7 @@
             totalDoses,
             dosesTaken: 0,
             last_taken: 0,
-            notified: false // Controle para não repetir a notificação infinitamente
+            notified: false
         };
 
         meds.push(newMed);
@@ -133,7 +170,7 @@
         if (med) {
             med.dosesTaken += 1;
             med.last_taken = Date.now();
-            med.notified = false; // Reseta para avisar na próxima dose
+            med.notified = false;
             
             if (med.dosesTaken >= med.totalDoses) {
                 alert(`Tratamento de ${med.name} concluído!`);
@@ -150,7 +187,7 @@
         }
     }
 
-    function render() {
+function render() {
         const list = document.getElementById("list");
         list.innerHTML = "";
 
@@ -159,7 +196,7 @@
             let isOverdue = false;
             
             if (med.last_taken === 0) {
-                timeText = "Aguardando primeira dose";
+                timeText = "Aguardando 1ª dose";
                 isOverdue = true;
             } else {
                 const nextDose = med.last_taken + (med.interval * 3600000);
@@ -169,10 +206,10 @@
                     isOverdue = true;
                     timeText = "⚠️ HORA DE TOMAR!";
                     
-                    // Disparar notificação se ainda não foi avisado nesta dose
+                    // Dispara a notificação APENAS se ainda não avisou nesta dose
                     if (!med.notified) {
-                        sendNotification("Hora do Medicamento!", `Está na hora de tomar: ${med.name}`);
-                        med.notified = true; // Marca como notificado
+                        sendNotification("MedTracker", `Está na hora: ${med.name}`);
+                        med.notified = true; 
                         localStorage.setItem('meds_v3', JSON.stringify(meds));
                     }
                 } else {
@@ -188,7 +225,7 @@
             div.innerHTML = `
                 <button class="delete-btn" onclick="removeMed(${med.id})">Excluir</button>
                 <div class="med-name">${med.name}</div>
-                <div class="med-info">Dose ${med.dosesTaken} de ${med.totalDoses} • Cada ${med.interval}h</div>
+                <div class="med-info">Dose ${med.dosesTaken}/${med.totalDoses} • Cada ${med.interval}h</div>
                 <div class="progress-container"><div class="progress-bar" style="width: ${progress}%"></div></div>
                 <div class="timer ${isOverdue ? 'alert-text' : ''}">${timeText}</div>
                 <button class="btn-take" onclick="takeMed(${med.id})">${med.last_taken === 0 ? 'Tomar 1ª Dose' : 'Registrar Dose'}</button>
@@ -197,10 +234,11 @@
         });
     }
 
-    // Verifica a cada 10 segundos para ser preciso na notificação
-    setInterval(render, 10000);
+    // ATUALIZAÇÃO PARA 30 SEGUNDOS (30000 milissegundos)
+    setInterval(render, 30000); 
+
+    checkNotificationStatus();
     render();
 </script>
-
 </body>
 </html>
