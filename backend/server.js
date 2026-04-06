@@ -8,7 +8,7 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
-// ===== ROTAS API (DEVEM VIR PRIMEIRO) =====
+// ===== ROTAS API =====
 
 // Listar medicamentos
 app.get('/meds', (req, res) => {
@@ -50,14 +50,17 @@ app.post('/take/:id', (req, res) => {
 
 // ===== FRONTEND =====
 
-const frontendPath = path.join(__dirname, '..', 'frontend');
+const frontendPath = path.resolve(__dirname, '../frontend');
 
-// Arquivos estáticos
+// TESTE: loga o caminho real
+console.log("Caminho do frontend:", frontendPath);
+
+// Servir arquivos estáticos
 app.use(express.static(frontendPath));
 
-// Rota principal
+// Rota principal (FORÇA abrir index.html)
 app.get('/', (req, res) => {
-  res.sendFile(path.join(frontendPath, 'index.html'));
+  res.sendFile(path.resolve(frontendPath, 'index.html'));
 });
 
 // ===== SERVIDOR =====
