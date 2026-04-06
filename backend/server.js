@@ -8,20 +8,23 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
-// Servir arquivos do frontend
-app.use(express.static(path.join(__dirname, '../frontend')));
+// Caminho absoluto para a pasta frontend
+const frontendPath = path.join(__dirname, '..', 'frontend');
 
-// Rota principal (abre o index.html)
-app.get('/', (req, res) => {
-  res.sendFile(path.join(__dirname, '../frontend/index.html'));
+// Servir arquivos estáticos (CSS, JS)
+app.use(express.static(frontendPath));
+
+// Rota principal SEMPRE retorna o index.html
+app.get('*', (req, res) => {
+  res.sendFile(path.join(frontendPath, 'index.html'));
 });
+
+// ===== ROTAS API =====
 
 // Listar medicamentos
 app.get('/meds', (req, res) => {
   db.all("SELECT * FROM medications", [], (err, rows) => {
-    if (err) {
-      return res.status(500).json({ error: err.message });
-    }
+    if (err) return res.status(500).json({ error: err.message });
     res.json(rows);
   });
 });
@@ -38,29 +41,25 @@ app.post('/meds', (req, res) => {
     "INSERT INTO medications (name, interval, last_taken) VALUES (?, ?, ?)",
     [name, interval, Date.now()],
     function (err) {
-      if (err) {
-        return res.status(500).json({ error: err.message });
-      }
+      if (err) return res.status(500).json({ error: err.message });
       res.json({ id: this.lastID });
     }
   );
 });
 
-// Registrar uso do medicamento
+// Registrar uso
 app.post('/take/:id', (req, res) => {
   db.run(
     "UPDATE medications SET last_taken = ? WHERE id = ?",
     [Date.now(), req.params.id],
     function (err) {
-      if (err) {
-        return res.status(500).json({ error: err.message });
-      }
+      if (err) return res.status(500).json({ error: err.message });
       res.json({ success: true });
     }
   );
 });
 
-// Porta dinâmica (Codespaces/Render) ou 3000 local
+// Porta dinâmica
 const PORT = process.env.PORT || 3000;
 
 app.listen(PORT, () => {
