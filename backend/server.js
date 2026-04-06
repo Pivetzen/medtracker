@@ -8,18 +8,7 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
-// Caminho absoluto para a pasta frontend
-const frontendPath = path.join(__dirname, '..', 'frontend');
-
-// Servir arquivos estáticos (CSS, JS)
-app.use(express.static(frontendPath));
-
-// Rota principal SEMPRE retorna o index.html
-app.get('*', (req, res) => {
-  res.sendFile(path.join(frontendPath, 'index.html'));
-});
-
-// ===== ROTAS API =====
+// ===== ROTAS API (DEVEM VIR PRIMEIRO) =====
 
 // Listar medicamentos
 app.get('/meds', (req, res) => {
@@ -59,7 +48,20 @@ app.post('/take/:id', (req, res) => {
   );
 });
 
-// Porta dinâmica
+// ===== FRONTEND =====
+
+const frontendPath = path.join(__dirname, '..', 'frontend');
+
+// Arquivos estáticos
+app.use(express.static(frontendPath));
+
+// Rota principal
+app.get('/', (req, res) => {
+  res.sendFile(path.join(frontendPath, 'index.html'));
+});
+
+// ===== SERVIDOR =====
+
 const PORT = process.env.PORT || 3000;
 
 app.listen(PORT, () => {
