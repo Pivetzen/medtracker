@@ -3,127 +3,99 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>MedTracker | Seu Controle de Saúde</title>
+    <title>MedTracker | Cronograma Inteligente</title>
     <style>
         :root {
             --primary: #2563eb;
-            --secondary: #64748b;
-            --success: #10b981;
-            --danger: #ef4444;
             --bg: #f1f5f9;
             --card: #ffffff;
             --text: #1e293b;
+            --success: #10b981;
+            --warning: #f59e0b;
+            --danger: #ef4444;
         }
 
         * { box-sizing: border-box; margin: 0; padding: 0; }
-
-        body { 
-            font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; 
-            background-color: var(--bg); 
-            color: var(--text);
-            line-height: 1.6;
-            padding: 20px;
-            display: flex;
-            justify-content: center;
-        }
-
-        .container {
-            width: 100%;
-            max-width: 450px;
-            background: var(--card);
-            padding: 25px;
-            border-radius: 16px;
-            box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1);
-        }
-
-        h1 { font-size: 1.5rem; text-align: center; margin-bottom: 20px; color: var(--primary); }
+        body { font-family: 'Segoe UI', system-ui, sans-serif; background: var(--bg); color: var(--text); padding: 20px; display: flex; justify-content: center; }
+        
+        .container { width: 100%; max-width: 450px; background: var(--card); padding: 25px; border-radius: 20px; box-shadow: 0 10px 25px rgba(0,0,0,0.05); }
+        
+        .logo { display: flex; align-items: center; justify-content: center; gap: 10px; margin-bottom: 25px; font-size: 1.5rem; font-weight: 800; color: var(--primary); }
         
         .form-group { margin-bottom: 15px; }
+        label { display: block; font-size: 0.85rem; font-weight: 700; margin-bottom: 5px; color: #64748b; }
         
-        label { display: block; font-size: 0.9rem; font-weight: 600; margin-bottom: 5px; }
-
         input { 
-            width: 100%; 
-            padding: 12px; 
-            border: 1px solid #cbd5e1; 
-            border-radius: 8px;
-            font-size: 1rem;
-            outline: none;
-            transition: border-color 0.2s;
+            width: 100%; padding: 14px; border: 2px solid #e2e8f0; border-radius: 12px; font-size: 1rem; transition: all 0.2s;
         }
+        input:focus { border-color: var(--primary); outline: none; background: #fff; }
 
-        input:focus { border-color: var(--primary); }
-
-        button { 
-            width: 100%; 
-            padding: 14px; 
-            background: var(--primary); 
-            color: white; 
-            border: none; 
-            border-radius: 8px; 
-            cursor: pointer;
-            font-size: 1rem;
-            font-weight: 600;
-            margin-top: 10px;
+        .btn-add { 
+            width: 100%; padding: 16px; background: var(--primary); color: white; border: none; border-radius: 12px; 
+            font-size: 1rem; font-weight: 700; cursor: pointer; transition: transform 0.1s, opacity 0.2s;
         }
+        .btn-add:active { transform: scale(0.98); }
 
-        button:active { transform: scale(0.98); }
+        h2 { font-size: 1.1rem; margin: 30px 0 15px; display: flex; justify-content: space-between; align-items: center; }
 
-        h2 { font-size: 1.2rem; margin: 25px 0 15px; border-bottom: 2px solid var(--bg); padding-bottom: 5px; }
-
-        ul { list-style: none; }
-
-        li { 
-            background: var(--bg); 
-            margin-bottom: 12px; 
-            padding: 15px; 
-            border-radius: 10px; 
-            display: flex; 
-            flex-direction: column;
-            position: relative;
-            border-left: 5px solid var(--primary);
-        }
-
-        .med-header { display: flex; justify-content: space-between; align-items: flex-start; }
-        .med-name { font-weight: 700; font-size: 1.1rem; }
+        .med-list { display: flex; flex-direction: column; gap: 15px; }
         
-        .med-time { font-size: 0.85rem; color: var(--secondary); margin: 5px 0 12px; }
+        .med-card { 
+            background: #fff; border: 1px solid #e2e8f0; padding: 18px; border-radius: 15px; 
+            position: relative; transition: all 0.3s ease;
+        }
+        
+        .status-on-time { border-left: 6px solid var(--success); }
+        .status-delayed { border-left: 6px solid var(--danger); background: #fff1f2; }
 
-        .actions { display: flex; gap: 10px; }
+        .med-name { font-weight: 800; font-size: 1.1rem; display: block; margin-bottom: 4px; }
+        .med-meta { font-size: 0.8rem; color: #64748b; margin-bottom: 12px; }
 
-        .btn-take { background: var(--success); padding: 8px; font-size: 0.85rem; margin-top: 0; }
-        .btn-delete { background: transparent; color: var(--danger); width: auto; padding: 0; font-size: 0.8rem; text-decoration: underline; margin: 0; }
+        .timer-box { font-size: 0.9rem; font-weight: 700; margin-bottom: 15px; }
+        .time-remaining { color: var(--primary); }
+        .time-overdue { color: var(--danger); animation: blink 1s infinite; }
 
-        .empty-state { text-align: center; color: var(--secondary); font-size: 0.9rem; margin-top: 20px; }
+        @keyframes blink { 50% { opacity: 0.6; } }
+
+        .btn-take { 
+            width: 100%; padding: 12px; background: var(--success); color: white; border: none; 
+            border-radius: 10px; font-weight: 700; cursor: pointer;
+        }
+
+        .delete-link { 
+            font-size: 0.75rem; color: #94a3b8; cursor: pointer; text-decoration: none; margin-top: 10px; display: inline-block;
+        }
+        .delete-link:hover { color: var(--danger); }
+
+        .empty { text-align: center; color: #94a3b8; padding: 20px; font-size: 0.9rem; }
     </style>
 </head>
 <body>
 
 <div class="container">
-    <h1>💊 MedTracker</h1>
+    <div class="logo">💊 MedTracker</div>
 
     <div class="form-group">
-        <label>Nome do Medicamento</label>
-        <input id="name" type="text" placeholder="Ex: Paracetamol">
+        <label>Qual o remédio?</label>
+        <input id="name" type="text" placeholder="Ex: Amoxicilina">
     </div>
 
     <div class="form-group">
-        <label>Intervalo (Horas)</label>
+        <label>De quantas em quantas horas?</label>
         <input id="interval" type="number" placeholder="Ex: 8">
     </div>
 
-    <button onclick="addMed()">Adicionar à Lista</button>
+    <button class="btn-add" onclick="addMed()">Adicionar à Lista</button>
 
-    <h2>Minhas Medicações</h2>
-    <ul id="list"></ul>
+    <h2>Suas Medicações</h2>
+    <div id="list" class="med-list"></div>
 </div>
 
 <script>
-    // Inicialização do Banco de Dados Local
-    let meds = JSON.parse(localStorage.getItem('meds_v1')) || [];
+    let meds = JSON.parse(localStorage.getItem('meds_v2')) || [];
 
     function save() {
-        localStorage.setItem('meds_v1', JSON.stringify(meds));
+        localStorage.setItem('meds_v2', JSON.stringify(meds));
         render();
     }
 
@@ -131,16 +103,13 @@
         const nameInput = document.getElementById("name");
         const intervalInput = document.getElementById("interval");
 
-        if (!nameInput.value || !intervalInput.value) {
-            alert("Por favor, preencha o nome e o intervalo.");
-            return;
-        }
+        if (!nameInput.value || !intervalInput.value) return alert("Preencha tudo!");
 
         const newMed = {
             id: Date.now(),
             name: nameInput.value,
             interval: parseFloat(intervalInput.value),
-            last_taken: Date.now()
+            last_taken: Date.now() // Define que a primeira dose é agora
         };
 
         meds.push(newMed);
@@ -152,13 +121,13 @@
     function takeMed(id) {
         const index = meds.findIndex(m => m.id === id);
         if (index !== -1) {
-            meds[index].last_taken = Date.now();
+            meds[index].last_taken = Date.now(); // Novo ciclo começa EXATAMENTE agora
             save();
         }
     }
 
-    function deleteMed(id) {
-        if(confirm("Deseja remover este medicamento?")) {
+    function removeMed(id) {
+        if(confirm("Remover este medicamento?")) {
             meds = meds.filter(m => m.id !== id);
             save();
         }
@@ -169,45 +138,50 @@
         list.innerHTML = "";
 
         if (meds.length === 0) {
-            list.innerHTML = '<p class="empty-state">Nenhum medicamento cadastrado.</p>';
+            list.innerHTML = '<div class="empty">Nenhum remédio cadastrado.</div>';
             return;
         }
+
+        // Ordenar: os que precisam ser tomados logo aparecem primeiro
+        meds.sort((a, b) => {
+            let nextA = a.last_taken + (a.interval * 3600000);
+            let nextB = b.last_taken + (b.interval * 3600000);
+            return nextA - nextB;
+        });
 
         meds.forEach(med => {
             const nextDose = med.last_taken + (med.interval * 3600000);
             const diff = nextDose - Date.now();
-            
-            let timeText = "";
-            if (diff <= 0) {
-                timeText = "⚠️ HORA DE TOMAR!";
-            } else {
-                const h = Math.floor(diff / 3600000);
-                const m = Math.floor((diff % 3600000) / 60000);
-                timeText = `Próxima dose em: ${h}h ${m}min`;
-            }
+            const isOverdue = diff <= 0;
 
-            const li = document.createElement("li");
+            const h = Math.abs(Math.floor(diff / 3600000));
+            const m = Math.abs(Math.floor((diff % 3600000) / 60000));
+
+            const li = document.createElement("div");
+            li.className = `med-card ${isOverdue ? 'status-delayed' : 'status-on-time'}`;
+            
             li.innerHTML = `
-                <div class="med-header">
-                    <span class="med-name">${med.name}</span>
-                    <button class="btn-delete" onclick="deleteMed(${med.id})">Remover</button>
+                <span class="med-name">${med.name}</span>
+                <div class="med-meta">Intervalo de ${med.interval} em ${med.interval} horas</div>
+                
+                <div class="timer-box">
+                    ${isOverdue 
+                        ? `<span class="time-overdue">⚠️ Atrasado: ${h}h ${m}min</span>` 
+                        : `Próxima dose em: <span class="time-remaining">${h}h ${m}min</span>`
+                    }
                 </div>
-                <div class="med-time">${timeText} (A cada ${med.interval}h)</div>
-                <button class="btn-take" onclick="takeMed(${med.id})">Registrar Dose Agora</button>
+
+                <button class="btn-take" onclick="takeMed(${med.id})">
+                    ${isOverdue ? 'Tomar Agora' : 'Marcar como Tomado'}
+                </button>
+                <a class="delete-link" onclick="removeMed(${med.id})">Remover medicamento</a>
             `;
             list.appendChild(li);
         });
     }
 
-    // Notificações (opcional)
-    if ("Notification" in window && Notification.permission === "default") {
-        Notification.requestPermission();
-    }
-
-    // Atualizar interface a cada 1 minuto para o timer
-    setInterval(render, 60000);
-
-    // Primeira renderização
+    // Atualiza a cada 30 segundos
+    setInterval(render, 30000);
     render();
 </script>
 
